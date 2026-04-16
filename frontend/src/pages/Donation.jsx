@@ -1,0 +1,229 @@
+import React, { useState } from "react";
+import { Heart, Landmark, Smartphone, ShieldCheck } from "lucide-react";
+
+const Donation = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    amount: "",
+    modeOfPayment: "",
+    transactionId: "",
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const paymentApps = [
+    "Google Pay (GPay)",
+    "PhonePe",
+    "Paytm",
+    "Amazon Pay",
+    "BHIM UPI",
+    "Bank Transfer (NEFT/IMPS)",
+    "Other",
+  ];
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/donations/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert("Donation details submitted successfully!");
+        setFormData({
+          name: "",
+          phone: "",
+          amount: "",
+          modeOfPayment: "",
+          transactionId: "",
+        });
+      }
+    } catch (error) {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="pt-32 pb-20 min-h-screen bg-slate-50 dark:bg-slate-950 relative overflow-hidden transition-colors duration-300">
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-100/30 dark:bg-blue-900/10 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[10%] left-[-5%] w-[40%] h-[40%] bg-indigo-200/30 dark:bg-indigo-900/10 rounded-full blur-[100px]"></div>
+      </div>
+
+      <div className="container mx-auto px-6 max-w-6xl relative z-10">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight">
+            Support Our Cause
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto text-lg">
+            Your small contribution can provide a meal or medicine to someone in
+            need.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+          <div className="space-y-8">
+            <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white dark:border-slate-800 shadow-xl">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6 flex items-center gap-3">
+                <Smartphone className="text-blue-600" /> UPI Payment
+              </h2>
+              <div className="flex flex-col items-center">
+                <div className="bg-white p-4 rounded-3xl shadow-inner mb-6 border-4 border-slate-50">
+                  <img
+                    src="src/assets/qr-placeholder.png"
+                    alt="QR Code"
+                    className="w-48 h-48 object-contain"
+                  />
+                </div>
+                <p className="text-center font-bold text-slate-800 dark:text-slate-200 text-lg mb-1">
+                  UPI ID: shelterconnect@upi
+                </p>
+                <p className="text-slate-400 text-xs uppercase tracking-widest font-black">
+                  Scan to donate
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white dark:border-slate-800 shadow-xl">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6 flex items-center gap-3">
+                <Landmark className="text-indigo-600" /> Bank Transfer
+              </h2>
+              <div className="space-y-4 text-slate-600 dark:text-slate-300">
+                <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                  <span className="font-bold">Account Name:</span>
+                  <span>ShelterConnect Foundation</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                  <span className="font-bold">Bank:</span>
+                  <span>HDFC Bank</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                  <span className="font-bold">IFSC Code:</span>
+                  <span className="font-mono">HDFC000XXXX</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-bold">Account No:</span>
+                  <span className="font-mono">XXXXXXXXXXXX</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900 text-white p-8 md:p-12 rounded-[3rem] shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl"></div>
+
+            <h2 className="text-3xl font-black mb-8 relative z-10">
+              Notify Us
+            </h2>
+
+            <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Full Name
+                </label>
+                <input
+                  required
+                  name="name"
+                  type="text"
+                  placeholder="Your Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full bg-slate-800/50 border border-slate-700 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                    Amount
+                  </label>
+                  <input
+                    required
+                    name="amount"
+                    type="number"
+                    placeholder="₹"
+                    value={formData.amount}
+                    onChange={handleChange}
+                    className="w-full bg-slate-800/50 border border-slate-700 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                    Phone
+                  </label>
+                  <input
+                    required
+                    name="phone"
+                    type="tel"
+                    placeholder="10 Digits"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full bg-slate-800/50 border border-slate-700 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Payment App
+                </label>
+                <select
+                  required
+                  name="modeOfPayment"
+                  value={formData.modeOfPayment}
+                  onChange={handleChange}
+                  className="w-full bg-slate-800/50 border border-slate-700 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                >
+                  <option value="">Select App</option>
+                  {paymentApps.map((app) => (
+                    <option key={app} value={app}>
+                      {app}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Transaction ID
+                </label>
+                <input
+                  required
+                  name="transactionId"
+                  type="text"
+                  placeholder="UTR / Ref No."
+                  value={formData.transactionId}
+                  onChange={handleChange}
+                  className="w-full bg-slate-800/50 border border-slate-700 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-mono"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-blue-900/20 flex items-center justify-center gap-3 text-lg mt-4"
+              >
+                <ShieldCheck size={24} />
+                {isSubmitting ? "Processing..." : "Confirm Donation"}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Donation;
