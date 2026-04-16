@@ -1,38 +1,22 @@
 import React, { useState } from "react";
-import { UserPlus, Image as ImageIcon, X, AlertCircle } from "lucide-react";
 
 const AddPerson = () => {
-  const [formData, setFormData] = useState({
+  const initialForm = {
+    uid: "",
     fullName: "",
     age: "",
-    gender: "",
+    gender: "Select",
+    mobileNo: "",
     address: "",
+    idDocument: "",
+    arrivalDateTime: "",
+    broughtBy: "",
     reason: "",
     condition: "",
-    broughtBy: "",
     image: null,
-  });
-
-  const [imagePreview, setImagePreview] = useState(null);
+  };
+  const [formData, setFormData] = useState(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData({ ...formData, image: file });
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const clearImage = () => {
-    setFormData({ ...formData, image: null });
-    setImagePreview(null);
-    document.getElementById("person-image").value = "";
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,286 +24,261 @@ const AddPerson = () => {
 
     try {
       const token = localStorage.getItem("adminToken");
-      const submitData = new FormData();
-
-      submitData.append("fullName", formData.fullName);
-      submitData.append("age", Number(formData.age));
-      submitData.append("gender", formData.gender);
-      submitData.append("address", formData.address);
-      submitData.append("reason", formData.reason);
-      submitData.append("condition", formData.condition);
-      submitData.append("broughtBy", formData.broughtBy);
-
-      if (formData.image) {
-        submitData.append("image", formData.image);
-      }
+      const dataToSend = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] !== null && formData[key] !== "") {
+          dataToSend.append(key, formData[key]);
+        }
+      });
 
       const response = await fetch("http://localhost:5000/api/persons/add", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: submitData,
+        headers: { Authorization: `Bearer ${token}` },
+        body: dataToSend,
       });
 
       const data = await response.json();
 
       if (data.success) {
-        alert("New resident added successfully!");
-        setFormData({
-          fullName: "",
-          age: "",
-          gender: "",
-          address: "",
-          reason: "",
-          condition: "",
-          broughtBy: "",
-          image: null,
-        });
-        setImagePreview(null);
-        document.getElementById("person-image").value = "";
+        alert(
+          "✅ Record saved successfully! " +
+            (formData.uid ? `(UID: ${formData.uid})` : ""),
+        );
+        setFormData(initialForm);
+        document.getElementById("photo-upload").value = "";
       } else {
-        alert("Error: " + data.message);
+        alert("❌ Error: " + data.message);
       }
     } catch (error) {
-      alert("Failed to connect to server.");
+      alert("⚠️ Backend connection error!");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleClear = () => {
-    if (window.confirm("Are you sure you want to clear the form?")) {
-      setFormData({
-        fullName: "",
-        age: "",
-        gender: "",
-        address: "",
-        reason: "",
-        condition: "",
-        broughtBy: "",
-        image: null,
-      });
-      setImagePreview(null);
-      document.getElementById("person-image").value = "";
-    }
-  };
-
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden font-sans transition-colors duration-300">
-      <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4 bg-slate-50 dark:bg-slate-800/50">
-        <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-200 dark:border-blue-800/50">
-          <UserPlus size={24} strokeWidth={2.5} />
-        </div>
-        <div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading tracking-tight">
-            Add New Resident
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Register a newly rescued individual into the shelter database.
-          </p>
-        </div>
+    <div className="max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 md:p-8 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
+      <div className="mb-8 border-b border-gray-100 dark:border-gray-700 pb-4">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white font-heading">
+          Digital Attendance Register
+        </h2>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+          ShelterConnect Project
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
-        {/* Section 1: Basic Info */}
-        <div>
-          <h3 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
-            Personal Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Full Name / Alias *
-              </label>
-              <input
-                required
-                name="fullName"
-                type="text"
-                value={formData.fullName}
-                onChange={handleChange}
-                placeholder="e.g. Unknown / John Doe"
-                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 outline-none transition-colors"
-              />
-            </div>
+      <form onSubmit={handleSubmit} className="space-y-6 font-sans">
+        <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">
+          1. Personal Details
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
+          <div>
+            <label className="block text-sm font-bold text-blue-600 dark:text-blue-400 mb-1">
+              Unique ID (UID)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. SC-2026-001"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border-2 border-blue-100 dark:border-blue-900 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              value={formData.uid}
+              onChange={(e) =>
+                setFormData({ ...formData, uid: e.target.value })
+              }
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Age (Approx) *
-              </label>
-              <input
-                required
-                name="age"
-                type="number"
-                value={formData.age}
-                onChange={handleChange}
-                placeholder="e.g. 45"
-                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 outline-none transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Gender *
-              </label>
-              <select
-                required
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 outline-none transition-colors"
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Found At Location *
-              </label>
-              <input
-                required
-                name="address"
-                type="text"
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="e.g. Kalyan Station Platform 1"
-                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 outline-none transition-colors"
-              />
-            </div>
+          <div className="md:col-span-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Full Name *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Enter full name"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              value={formData.fullName}
+              onChange={(e) =>
+                setFormData({ ...formData, fullName: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Age*
+            </label>
+            <input
+              type="number"
+              required
+              placeholder="Age"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              value={formData.age}
+              onChange={(e) =>
+                setFormData({ ...formData, age: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Gender*
+            </label>
+            <select
+              required
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              value={formData.gender}
+              onChange={(e) =>
+                setFormData({ ...formData, gender: e.target.value })
+              }
+            >
+              <option value="Select" disabled>
+                Select
+              </option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
         </div>
 
-        {/* Section 2: Condition & Admission */}
-        <div>
-          <h3 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
-            Admission Details
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Brought By *
-              </label>
-              <input
-                required
-                name="broughtBy"
-                type="text"
-                value={formData.broughtBy}
-                onChange={handleChange}
-                placeholder="e.g. NMMC Rescue Team / NGO Volunteer"
-                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 outline-none transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Primary Reason for Admission *
-              </label>
-              <input
-                required
-                name="reason"
-                type="text"
-                value={formData.reason}
-                onChange={handleChange}
-                placeholder="e.g. Homeless, Injured, Mentally Ill"
-                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 outline-none transition-colors"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Physical / Mental Condition Details
-              </label>
-              <textarea
-                name="condition"
-                rows="3"
-                value={formData.condition}
-                onChange={handleChange}
-                placeholder="Describe current health status, injuries, or behavior..."
-                className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600 outline-none transition-colors resize-none"
-              ></textarea>
-            </div>
+        <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2 mt-6">
+          2. Contact & Identity
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Address / Found At*
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Last known address"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              value={formData.address}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Mobile No.
+            </label>
+            <input
+              type="tel"
+              placeholder="If available"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              value={formData.mobileNo}
+              onChange={(e) =>
+                setFormData({ ...formData, mobileNo: e.target.value })
+              }
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              ID Document No.
+            </label>
+            <input
+              type="text"
+              placeholder="Voter ID, PAN, etc."
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              value={formData.idDocument}
+              onChange={(e) =>
+                setFormData({ ...formData, idDocument: e.target.value })
+              }
+            />
           </div>
         </div>
 
-        {/* Section 3: Photo Upload */}
-        <div>
-          <h3 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
-            Identification
-          </h3>
-
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <div className="flex-1 w-full">
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Upload Photograph
-              </label>
-              <div className="relative border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-6 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-center group">
-                <input
-                  type="file"
-                  id="person-image"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                />
-                <div className="pointer-events-none flex flex-col items-center justify-center space-y-2">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full group-hover:scale-110 transition-transform">
-                    <ImageIcon size={28} />
-                  </div>
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                    Click to upload or drag and drop
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    SVG, PNG, JPG or GIF (MAX. 800x400px)
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Image Preview Box */}
-            {imagePreview && (
-              <div className="relative w-40 h-40 rounded-2xl overflow-hidden shadow-md border border-slate-200 dark:border-slate-700 shrink-0">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={clearImage}
-                  className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-lg hover:bg-red-600 backdrop-blur-sm transition-colors"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
+        <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2 mt-6">
+          3. Admission Details
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Arrival Date & Time *
+            </label>
+            <input
+              type="datetime-local"
+              required
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              value={formData.arrivalDateTime}
+              onChange={(e) =>
+                setFormData({ ...formData, arrivalDateTime: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Brought By *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g., Police, Volunteer"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              value={formData.broughtBy}
+              onChange={(e) =>
+                setFormData({ ...formData, broughtBy: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Reason for Coming *
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g., Homeless, Lost"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
+              value={formData.reason}
+              onChange={(e) =>
+                setFormData({ ...formData, reason: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Upload Photo
+            </label>
+            <input
+              type="file"
+              id="photo-upload"
+              accept="image/*"
+              className="w-full px-4 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-blue-50 dark:file:bg-blue-900/40 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900 transition-colors"
+              onChange={(e) =>
+                setFormData({ ...formData, image: e.target.files[0] })
+              }
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Physical Condition / Remarks
+            </label>
+            <textarea
+              rows="2"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-600 outline-none resize-none"
+              value={formData.condition}
+              onChange={(e) =>
+                setFormData({ ...formData, condition: e.target.value })
+              }
+            ></textarea>
           </div>
         </div>
 
-        {/* 🔥 FIX: Buttons contrast explicitly handled for dark mode */}
-        <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex justify-end gap-4 mt-8 pt-4 border-t border-gray-100 dark:border-gray-700">
           <button
             type="button"
-            onClick={handleClear}
-            className="px-6 py-3.5 rounded-xl font-bold transition-all text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 dark:text-slate-300 dark:bg-slate-800 dark:border-slate-700 dark:hover:bg-slate-700 dark:hover:text-white w-full sm:w-auto"
+            onClick={() => setFormData(initialForm)}
+            className="px-6 py-2.5 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition-colors"
           >
             Clear Form
           </button>
-
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-8 py-3.5 rounded-xl font-bold transition-all bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 disabled:opacity-50 w-full sm:w-auto flex justify-center items-center gap-2"
+            className="px-8 py-2.5 text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-lg shadow-md font-bold transition-all disabled:opacity-50 flex items-center gap-2"
           >
-            {isSubmitting ? (
-              "Saving Record..."
-            ) : (
-              <>
-                <UserPlus size={18} /> Add Resident
-              </>
-            )}
+            {isSubmitting ? "Saving..." : "💾 Save Record"}
           </button>
         </div>
       </form>
